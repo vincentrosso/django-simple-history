@@ -38,12 +38,23 @@ registered_models = {}
 # This is used to store the user id - else just None.
 class CurrentUserField(models.ForeignKey):
     def __init__(self, **kwargs):
-        super(CurrentUserField, self).__init__(User, null=True, **kwargs)
+        kwargs['null'] = True
+        kwargs.pop('to', None)
+        super(CurrentUserField, self).__init__(User, **kwargs)
 
     def contribute_to_class(self, cls, name):
         super(CurrentUserField, self).contribute_to_class(cls, name)
         registry = FieldRegistry()
         registry.add_field(cls, self)
+
+
+try:
+    import south
+except ImportError:
+    pass
+else:
+    from south.modelsinspector import add_introspection_rules
+    add_introspection_rules([], ["simple_history.models.CurrentUserField"])
 
 
 class HistoricalRecords(object):
