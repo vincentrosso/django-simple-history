@@ -7,6 +7,8 @@ from django.conf import settings
 from django.contrib import admin
 from django.utils import importlib
 from .manager import HistoryDescriptor
+from registration import FieldRegistry
+from django.contrib.auth.models import User
 
 try:
     basestring
@@ -32,6 +34,16 @@ except ImportError:  # django 1.3 compatibility
 
 
 registered_models = {}
+
+# This is used to store the user id - else just None.
+class CurrentUserField(models.ForeignKey):
+    def __init__(self, **kwargs):
+        super(CurrentUserField, self).__init__(User, null=True, **kwargs)
+
+    def contribute_to_class(self, cls, name):
+        super(CurrentUserField, self).contribute_to_class(cls, name)
+        registry = FieldRegistry()
+        registry.add_field(cls, self)
 
 
 class HistoricalRecords(object):
@@ -119,8 +131,6 @@ class HistoricalRecords(object):
     def get_extra_fields(self, model, fields):
         """Return dict of extra fields added to the historical record model"""
 
-        user_model = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
-
         @models.permalink
         def revert_url(self):
             opts = model._meta
@@ -131,10 +141,12 @@ class HistoricalRecords(object):
         def get_instance(self):
             return model(**dict([(k, getattr(self, k)) for k in fields]))
 
+        rel_nm = '_%s_history' % model._meta.object_name.lower()
+
         return {
             'history_id': models.AutoField(primary_key=True),
             'history_date': models.DateTimeField(auto_now_add=True),
-            'history_user': models.ForeignKey(user_model, null=True),
+            'history_user': CurrentUserField(related_name=rel_nm),
             'history_type': models.CharField(max_length=1, choices=(
                 ('+', 'Created'),
                 ('~', 'Changed'),
@@ -166,12 +178,11 @@ class HistoricalRecords(object):
         self.create_historical_record(instance, '-')
 
     def create_historical_record(self, instance, type):
-        history_user = getattr(instance, '_history_user', None)
         manager = getattr(instance, self.manager_name)
         attrs = {}
         for field in instance._meta.fields:
             attrs[field.attname] = getattr(instance, field.attname)
-        manager.create(history_type=type, history_user=history_user, **attrs)
+        manager.create(history_type=type, **attrs)
 
 
 def get_custom_fk_class(parent_type):

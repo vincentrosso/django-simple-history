@@ -14,6 +14,19 @@ django-simple-history stores Django model state on every create/update/delete.
 
 This app requires Django 1.3.7 or greater and Python 2.6 or greater.
 
+This fork adds automatic setting of the history_user field but requires you to
+change your settings.py file.
+Append the following line to your MIDDLEWARE_CLASSES:
+'simple_history.middleware.CurrentUserMiddleware',
+
+e.g.
+MIDDLEWARE_CLASSES = (
+  ...
+  'simple_history.middleware.CurrentUserMiddleware',
+  ...
+)
+
+
 Getting Help
 ------------
 
