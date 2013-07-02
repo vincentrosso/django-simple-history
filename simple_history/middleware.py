@@ -22,10 +22,12 @@ class CurrentUserMiddleware(object):
         signals.pre_save.connect(update_users, dispatch_uid=request, weak=False)
 
     def update_users(self, user, sender, instance, **kwargs):
-        registry = FieldRegistry()
-        if sender in registry:
-            for field in registry.get_fields(sender):
-                setattr(instance, field.name, user)
+        # We need to make sure the user is authenticated first (e.g. not a SimpleLazyObject)
+        if user.is_authenticated:
+            registry = FieldRegistry()
+            if sender in registry:
+                for field in registry.get_fields(sender):
+                    setattr(instance, field.name, user)
 
     def process_response(self, request, response):
         signals.pre_save.disconnect(dispatch_uid=request)
