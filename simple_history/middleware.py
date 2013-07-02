@@ -23,7 +23,7 @@ class CurrentUserMiddleware(object):
 
     def update_users(self, user, sender, instance, **kwargs):
         # We need to make sure the user is authenticated first (e.g. not a SimpleLazyObject)
-        if user.is_authenticated():
+        if user is None or user.is_authenticated():
             registry = FieldRegistry()
             if sender in registry:
                 for field in registry.get_fields(sender):
