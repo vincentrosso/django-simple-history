@@ -13,7 +13,7 @@ class CurrentUserMiddleware(object):
             # We aren't doing anything return..
             return
 
-        if hasattr(request, 'user') and request.user.is_authenticated:
+        if hasattr(request, 'user') and request.user.is_authenticated():
             user = request.user
         else:
             user = None
@@ -23,7 +23,7 @@ class CurrentUserMiddleware(object):
 
     def update_users(self, user, sender, instance, **kwargs):
         # We need to make sure the user is authenticated first (e.g. not a SimpleLazyObject)
-        if user.is_authenticated:
+        if user.is_authenticated():
             registry = FieldRegistry()
             if sender in registry:
                 for field in registry.get_fields(sender):
