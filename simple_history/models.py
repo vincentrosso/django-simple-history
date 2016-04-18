@@ -1,11 +1,12 @@
 from __future__ import unicode_literals
 
 import copy
+import importlib
+
 from django.db import models
 from django.db.models.fields.related import RelatedField
 from django.conf import settings
 from django.contrib import admin
-from django.utils import importlib
 from .manager import HistoryDescriptor
 from registration import FieldRegistry
 from django.contrib.auth.models import User
